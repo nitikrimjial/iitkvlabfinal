@@ -1,178 +1,120 @@
-const brands = [
-    {
-      iconName: "Objective Lense",
-      brandName: "Objective Lese",
-      color: "#ff0000"
-    },
-    {
-      iconName: "Slide",
-      brandName: "Slide",
-      color: "#fd5c63"
-    },
-    {
-      iconName: "Condenser Lense",
-      brandName: "Condenser Lense",
-      color: "#333333"
-    },
-    {
-        iconName: "Condenser Lense",
-        brandName: "Condenser Lense",
-        color: "#333333"
-      }
+let imgElement = new Image();
+let dragElement = document.createElement('span');
+let myData = {
+  id: 123,
+  tag: 'p',
+  text: 'Just a paragraph',
+  timestamp: 0,
+  url: '',
+};
 
- 
+document.addEventListener('DOMContentLoaded', () => {
+  
+  //required event listeners
+  document.body.addEventListener('dragstart', handleDragStart); //for draggable
+  document.body.addEventListener('drop', handleDrop); //for dropzone
+  document.body.addEventListener('dragover', handleOver); //for dropzone
+  
+  //optional but useful events
+  document.body.addEventListener('mousedown', handleCursorGrab);
+  document.body.addEventListener('dragenter', handleEnter);
+  document.body.addEventListener('dragleave', handleLeave);
+  
+  //set up draggable things (non-ios)
+  imgElement.src = './img/dragon-3.jpg';
+  document.querySelector('footer>p').appendChild(imgElement);
+  dragElement.textContent = 'Wheeeee';
+  dragElement.classList.add('wheeeee');
+  document.querySelector('footer>p').appendChild(dragElement);
+});
 
-    
-  ];
-  let correct = 0;
-  let total = 0;
-  const totalDraggableItems = 4;
-  const totalMatchingPairs = 4; // Should be <= totalDraggableItems
+function handleDragStart(ev) {
+  //user started to drag a draggable from the webpage
+  let obj = ev.target;
+  if (!obj.closest('.draggable')) return;
+  if(obj.classList.contains('draggable')){
+    obj = obj.firstElementChild;
+  }
+  // console.log('DRAGSTART');
+  // ev.dataTransfer.setDragImage(dragElement, 50, 50);
+  // ev.dataTransfer.setDragImage(imgElement, 50, 50);
+  // ev.dataTransfer.setData('text/plain', ' No MORE DATA ');
   
-  const scoreSection = document.querySelector(".score");
-  const correctSpan = scoreSection.querySelector(".correct");
-  const totalSpan = scoreSection.querySelector(".total");
-  const playAgainBtn = scoreSection.querySelector("#play-again-btn");
+  myData.tag = obj.tagName;
+  myData.text = obj.textContent?obj.textContent:obj.alt?obj.alt:'';
+  myData.url = obj.href?obj.href: obj.src? obj.src:'';
+  myData.timestamp = Date.now();
+  let data = JSON.stringify(myData);
+  ev.dataTransfer.setData('application/json', data);
+  obj.setAttribute('data-ts', myData.timestamp);
   
-  const draggableItems = document.querySelector(".draggable-items");
-  const matchingPairs = document.querySelector(".matching-pairs");
-  let draggableElements;
-  let droppableElements;
-  
-  initiateGame();
-  
-  function initiateGame() {
-    const randomDraggableBrands = generateRandomItemsArray(totalDraggableItems, brands);
-    const randomDroppableBrands = totalMatchingPairs<totalDraggableItems ? generateRandomItemsArray(totalMatchingPairs, randomDraggableBrands) : randomDraggableBrands;
-    const alphabeticallySortedRandomDroppableBrands = [...randomDroppableBrands].sort((a,b) => a.brandName.toLowerCase().localeCompare(b.brandName.toLowerCase()));
-    
-    // Create "draggable-items" and append to DOM
-    for(let i=0; i<randomDraggableBrands.length; i++) {
-    //   draggableItems.insertAdjacentHTML("beforeend", `
-    //     <i class="fab fa-${randomDraggableBrands[i].iconName} draggable" draggable="true" style="color: ${randomDraggableBrands[i].color};" id="${randomDraggableBrands[i].iconName}"></i>
-    //   `);
-      draggableItems.insertAdjacentHTML("beforeend", `
-        <i class="fab fa-${randomDraggableBrands[i].iconName} draggable" draggable="true" style="color: ${randomDraggableBrands[i].color};" id="${randomDraggableBrands[i].iconName}"></i>
-      `);
-    }
-    
-    // Create "matching-pairs" and append to DOM
-    for(let i=0; i<alphabeticallySortedRandomDroppableBrands.length; i++) {
-      matchingPairs.insertAdjacentHTML("beforeend", `
-        <div class="matching-pair">
-          <span class="label">${alphabeticallySortedRandomDroppableBrands[i].brandName}</span>
-          <span class="droppable" data-brand="${alphabeticallySortedRandomDroppableBrands[i].iconName}"></span>
-        </div>
-      `);
-    }
-    
-    draggableElements = document.querySelectorAll(".draggable");
-    droppableElements = document.querySelectorAll(".droppable");
-    
-    draggableElements.forEach(elem => {
-      elem.addEventListener("dragstart", dragStart);
-      // elem.addEventListener("drag", drag);
-      // elem.addEventListener("dragend", dragEnd);
-    });
-    
-    droppableElements.forEach(elem => {
-      elem.addEventListener("dragenter", dragEnter);
-      elem.addEventListener("dragover", dragOver);
-      elem.addEventListener("dragleave", dragLeave);
-      elem.addEventListener("drop", drop);
-    });
+  let dataList = ev.dataTransfer.items;
+  for(let i=0; i<ev.dataTransfer.items.length; i++){
+    let item = ev.dataTransfer.items[i];
+    // console.log(i, item.kind, item.type);
   }
   
-  // Drag and Drop Functions
+}
+function handleDrop(ev) {
+  let dropzone = ev.target;
+  if (!dropzone.classList.contains('dropzone')) return;
+
+  ev.preventDefault();
+  // console.log('DROP', ev.dataTransfer);
+  // let data = ev.dataTransfer.getData('text/plain');
+  let data = JSON.parse(ev.dataTransfer.getData('application/json'));
+  let draggable = document.querySelector(`[data-ts="${data.timestamp}"]`);
+  let clone = draggable.cloneNode(true);
+  dropzone.append(clone);
+  draggable.remove();
   
-  //Events fired on the drag target
+  // dropzone.textContent += data;
+  dropzone.classList.remove('over');
   
-  function dragStart(event) {
-    event.dataTransfer.setData("text", event.target.id); // or "text/plain"
-  }
-  
-  //Events fired on the drop target
-  
-  function dragEnter(event) {
-    if(event.target.classList && event.target.classList.contains("droppable") && !event.target.classList.contains("dropped")) {
-      event.target.classList.add("droppable-hover");
+  let len = ev.dataTransfer.items.length;
+  for(let i = 0; i < len; i++){
+    let item = ev.dataTransfer.items[i];
+    if(item.kind === 'string' && item.type.match('^text/html')){
+      //i got an html element
+    }
+    if(item.kind==='string' && item.type.match('^application/json')){
+      //same as before... except the method getAsString
+      item.getAsString((json)=>{
+        let data = JSON.parse(json);
+        console.log('timestamp was', data.timestamp);
+      })
     }
   }
   
-  function dragOver(event) {
-    if(event.target.classList && event.target.classList.contains("droppable") && !event.target.classList.contains("dropped")) {
-      event.preventDefault();
-    }
-  }
   
-  function dragLeave(event) {
-    if(event.target.classList && event.target.classList.contains("droppable") && !event.target.classList.contains("dropped")) {
-      event.target.classList.remove("droppable-hover");
-    }
-  }
-  
-  function drop(event) {
-    event.preventDefault();
-    event.target.classList.remove("droppable-hover");
-    const draggableElementBrand = event.dataTransfer.getData("text");
-    const droppableElementBrand = event.target.getAttribute("data-brand");
-    const isCorrectMatching = draggableElementBrand===droppableElementBrand;
-    total++;
-    if(isCorrectMatching) {
-      const draggableElement = document.getElementById(draggableElementBrand);
-      event.target.classList.add("dropped");
-      draggableElement.classList.add("dragged");
-      draggableElement.setAttribute("draggable", "false");
-      event.target.innerHTML = `<i class="fab fa-${draggableElementBrand}" style="color: ${draggableElement.style.color};"></i>`;
-      correct++;  
-    }
-    scoreSection.style.opacity = 0;
-    setTimeout(() => {
-      correctSpan.textContent = correct;
-      totalSpan.textContent = total;
-      scoreSection.style.opacity = 1;
-    }, 200);
-    if(correct===Math.min(totalMatchingPairs, totalDraggableItems)) { // Game Over!!
-      playAgainBtn.style.display = "block";
-      setTimeout(() => {
-        playAgainBtn.classList.add("play-again-btn-entrance");
-      }, 200);
-    }
-  }
-  
-  // Other Event Listeners
-  playAgainBtn.addEventListener("click", playAgainBtnClick);
-  function playAgainBtnClick() {
-    playAgainBtn.classList.remove("play-again-btn-entrance");
-    correct = 0;
-    total = 0;
-    draggableItems.style.opacity = 0;
-    matchingPairs.style.opacity = 0;
-    setTimeout(() => {
-      scoreSection.style.opacity = 0;
-    }, 100);
-    setTimeout(() => {
-      playAgainBtn.style.display = "none";
-      while (draggableItems.firstChild) draggableItems.removeChild(draggableItems.firstChild);
-      while (matchingPairs.firstChild) matchingPairs.removeChild(matchingPairs.firstChild);
-      initiateGame();
-      correctSpan.textContent = correct;
-      totalSpan.textContent = total;
-      draggableItems.style.opacity = 1;
-      matchingPairs.style.opacity = 1;
-      scoreSection.style.opacity = 1;
-    }, 500);
-  }
-  
-  // Auxiliary functions
-  function generateRandomItemsArray(n, originalArray) {
-    let res = [];
-    let clonedArray = [...originalArray];
-    if(n>clonedArray.length) n=clonedArray.length;
-    for(let i=1; i<=n; i++) {
-      const randomIndex = Math.floor(Math.random()*clonedArray.length);
-      res.push(clonedArray[randomIndex]);
-      clonedArray.splice(randomIndex, 1);
-    }
-    return res;
-  }
+}
+function handleOver(ev) {
+  //fires continually
+  let dropzone = ev.target;
+  if (!dropzone.classList.contains('dropzone')) return;
+  ev.preventDefault();
+  // dropzone.classList.add('over'); //can do this in handleEnter
+  // console.log('dragover dropzone');
+}
+
+//optional but useful visual stuff...
+function handleCursorGrab(ev) {
+  let obj = ev.target;
+  if (!obj.closest('.draggable')) return;
+  obj.style.cursor = 'grabbing'; //close the hand
+}
+function handleEnter(ev) {
+  //fires once
+  let dropzone = ev.target;
+  if (!dropzone.classList.contains('dropzone')) return;
+  ev.preventDefault();
+  dropzone.classList.add('over');
+  // console.log('dragenter dropzone')
+}
+function handleLeave(ev) {
+  let dropzone = ev.target;
+  if (!dropzone.classList.contains('dropzone')) return;
+  ev.preventDefault();
+  dropzone.classList.remove('over');
+  // console.log('dragleave dropzone');
+}
