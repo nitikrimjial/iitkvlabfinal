@@ -30,6 +30,24 @@ header h1 {
 header h2 {
   color: orangered;
 }
+a:hover {
+  background-color: #3498db;
+  color: black;
+}
+
+a.previous {
+  background-color: #5421bb80;
+  color: white;
+  position: absolute;
+  bottom: 20px;
+  left: 8px;
+  border-radius: 4px;
+}
+
+
+.round {
+  border-radius: 50%;
+}
 main {
   display: flex;
   justify-content: space-between;
