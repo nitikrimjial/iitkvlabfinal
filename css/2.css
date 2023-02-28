@@ -38,8 +38,10 @@ a:hover {
 a.previous {
   background-color: #5421bb80;
   color: white;
-  position: absolute;
-  bottom: 20px;
+/*   position: absolute;
+  bottom: 20px; */
+   position:fixed;
+   bottom:20px;
   left: 8px;
   border-radius: 4px;
 }
